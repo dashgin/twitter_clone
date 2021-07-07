@@ -1,17 +1,19 @@
-from rest_framework.exceptions import ValidationError
 from rest_framework.mixins import ListModelMixin, RetrieveModelMixin, DestroyModelMixin, CreateModelMixin
-from rest_framework.generics import CreateAPIView
 from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet
 from rest_framework.views import APIView
 from rest_framework import permissions, status
 from .models import Tweet
 from .serializers import TweetSerializer
+from django.shortcuts import get_object_or_404
+
+from twitter_clone.utils.permissions import IsOwnerOrReadOnly
 
 
 class TweetViewSet(RetrieveModelMixin, ListModelMixin, CreateModelMixin, DestroyModelMixin, GenericViewSet):
     queryset = Tweet.objects.all()
     serializer_class = TweetSerializer
+    permission_classes = [IsOwnerOrReadOnly]
 
     def perform_create(self, serializer):
         serializer.save(user=self.request.user)
@@ -30,16 +32,17 @@ class LikeToggleAPIView(APIView):
         return Response({"message": message}, status=status.HTTP_400_BAD_REQUEST)
 
 
-like_toggle = LikeToggleAPIView.as_view()
+like_toggle_view = LikeToggleAPIView.as_view()
 
 
 class RetweetAPIView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def post(self, request, *args, **kwargs):
-        parent = Tweet.objects.get(pk=int(self.kwargs['pk']))
-        if request.user.is_authenticated:
-            data = {'parent_id': parent.id, 'content': parent.content, 'is_retweet': True}
+        user = request.user
+        parent = get_object_or_404(Tweet, pk=int(self.kwargs['pk']))
+        if user.is_authenticated:
+            data = {'user_id': user.id, 'parent_id': parent.id, 'content': parent.content, 'is_retweet': True}
             serializer = TweetSerializer(data=data, context={'request': request})
             print(serializer)
             print(serializer.is_valid())
@@ -49,4 +52,4 @@ class RetweetAPIView(APIView):
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-retweet = RetweetAPIView.as_view()
+retweet_view = RetweetAPIView.as_view()

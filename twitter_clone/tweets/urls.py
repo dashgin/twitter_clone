@@ -1,9 +1,9 @@
 from django.urls import path
 
-from .views import like_toggle, retweet
+from .views import like_toggle_view, retweet_view
 
 app_name = "tweets"
 urlpatterns = [
-    path('<int:pk>/like/', like_toggle),
-    path('<int:pk>/retweet/', retweet)
+    path('<int:pk>/like/', like_toggle_view),
+    path('<int:pk>/retweet/', retweet_view)
 ]

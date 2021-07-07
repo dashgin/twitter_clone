@@ -1,4 +1,3 @@
-from django.utils import timezone
 from django.db import models
 from django.urls import reverse
 from django.contrib.auth import get_user_model
@@ -35,13 +34,13 @@ class Tweet(models.Model):
     content = models.CharField(max_length=150, validators=[validate_f_word])
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     created_at = models.DateTimeField(auto_now_add=True)
-    hashtags = models.ManyToManyField(to='HashTag', blank=True)
+    hashtags = models.ManyToManyField(to='Hashtag', blank=True)
     likes = models.ManyToManyField(User, related_name='tweet_likes', blank=True)
     is_retweet = models.BooleanField(default=False)
     objects = TweetManager()
 
     def __str__(self):
-        return str(self.user)
+        return str(self.user) + str(self.id)
 
     class Meta:
         ordering = ['-created_at']
@@ -63,7 +62,7 @@ class Tweet(models.Model):
         return qs | qs_parent
 
 
-class HashTag(models.Model):
+class Hashtag(models.Model):
     name = models.CharField(max_length=120, validators=[validate_f_word])
 
     def __str__(self):

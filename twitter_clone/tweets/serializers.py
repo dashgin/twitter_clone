@@ -1,13 +1,22 @@
 from django.utils.timesince import timesince
 from rest_framework import serializers
-
 from .models import Tweet
 
 from twitter_clone.users.serializers import UserSerializer
 
 
+# class RetweetSerializer(serializers.ModelSerializer):
+#     url = serializers.HyperlinkedIdentityField(view_name='api:tweet-detail', lookup_field='pk')
+#
+#     class Meta:
+#         model = Tweet
+#         fields = ['id', 'parent', 'url']
+#     parent = RetweetSerializer(read_only=True)
+
+
 class TweetSerializer(serializers.ModelSerializer):
-    # user = UserSerializer(default=serializers.CurrentUserDefault(), read_only=True)
+    user = UserSerializer(read_only=True, required=False)
+    user_id = serializers.CharField(write_only=True, required=False)
     parent_id = serializers.CharField(write_only=True, required=False)
     time_since = serializers.SerializerMethodField()
     date_display = serializers.SerializerMethodField()
@@ -22,7 +31,7 @@ class TweetSerializer(serializers.ModelSerializer):
     class Meta:
         model = Tweet
         fields = [
-            'id', 'user', 'parent_id', 'parent', 'content', 'created_at', 'time_since',
+            'id', 'user', 'parent_id', 'user_id', 'parent', 'content', 'created_at', 'time_since',
             'date_display', 'did_like', 'did_retweeted', 'likes_count', 'url'
         ]
 
@@ -44,10 +53,6 @@ class TweetSerializer(serializers.ModelSerializer):
         return False
 
     def get_did_retweeted(self, obj):
-        request = self.context.get("request")
-        user = request.user
         if obj.parent is not None:
             return True
         return False
-
-    # extra_kwargs = {'user': {'default': serializers.CurrentUserDefault()}}
